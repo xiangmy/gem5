@@ -30,13 +30,15 @@
 #define __MEM_RUBY_STRUCTURES_ABSTRACTREPLACEMENTPOLICY_HH__
 
 #include "base/types.hh"
+#include "mem/cache/replacement_policies/base.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "params/ReplacementPolicy.hh"
 #include "sim/sim_object.hh"
 
 class CacheMemory;
+class SimObject;
 
-class AbstractReplacementPolicy : public SimObject
+class AbstractReplacementPolicy : public BaseReplacementPolicy
 {
   public:
     typedef ReplacementPolicyParams Params;
@@ -45,9 +47,13 @@ class AbstractReplacementPolicy : public SimObject
 
     /* touch a block. a.k.a. update timestamp */
     virtual void touch(int64_t set, int64_t way, Tick time) = 0;
+    virtual void touch(const std::shared_ptr<ReplacementData>&
+                                       replacement_data) const override = 0;
 
     /* returns the way to replace */
     virtual int64_t getVictim(int64_t set) const = 0;
+    virtual ReplaceableEntry* getVictim(
+                const ReplacementCandidates& candidates) const override = 0;
 
     /* get the time of the last access */
     Tick getLastAccess(int64_t set, int64_t way);

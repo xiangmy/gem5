@@ -31,7 +31,7 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
-class ReplacementPolicy(SimObject):
+class ReplacementPolicy(BaseReplacementPolicy):
     type = 'ReplacementPolicy'
     cxx_class = 'AbstractReplacementPolicy'
     cxx_header = 'mem/ruby/structures/AbstractReplacementPolicy.hh'
