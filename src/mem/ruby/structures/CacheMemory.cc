@@ -170,7 +170,7 @@ CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
     if (loc != -1) {
         // Do we even have a tag match?
         AbstractCacheEntry* entry = m_cache[cacheSet][loc];
-        m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
+        m_replacementPolicy_ptr->touch(m_cache[cacheSet][loc]);
         data_ptr = &(entry->getDataBlk());
 
         if (entry->m_Permission == AccessPermission_Read_Write) {
@@ -198,7 +198,7 @@ CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
     if (loc != -1) {
         // Do we even have a tag match?
         AbstractCacheEntry* entry = m_cache[cacheSet][loc];
-        m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
+        m_replacementPolicy_ptr->touch(m_cache[cacheSet][loc]);
         data_ptr = &(entry->getDataBlk());
 
         return m_cache[cacheSet][loc]->m_Permission !=
@@ -282,7 +282,7 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry, bool touch)
             entry->setWayIndex(i);
 
             if (touch) {
-                m_replacementPolicy_ptr->touch(cacheSet, i, curTick());
+                m_replacementPolicy_ptr->touch(m_cache[cacheSet][i]);
             }
 
             return entry;
@@ -314,8 +314,9 @@ CacheMemory::cacheProbe(Addr address) const
     assert(!cacheAvail(address));
 
     int64_t cacheSet = addressToCacheSet(address);
-    return m_cache[cacheSet][m_replacementPolicy_ptr->getVictim(cacheSet)]->
-        m_Address;
+    ReplacementCandidates entry = m_cache[cacheSet];
+    return m_cache[cacheSet]
+            [m_replacementPolicy_ptr->getVictim(entry)->getWay()]->m_Address;
 }
 
 // looks an address up in the cache
@@ -348,7 +349,7 @@ CacheMemory::setMRU(Addr address)
     int loc = findTagInSet(cacheSet, address);
 
     if (loc != -1)
-        m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
+        m_replacementPolicy_ptr->touch(m_cache[cacheSet][loc]);
 }
 
 void
@@ -356,7 +357,7 @@ CacheMemory::setMRU(const AbstractCacheEntry *e)
 {
     uint32_t cacheSet = e->getSetIndex();
     uint32_t loc = e->getWayIndex();
-    m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
+    m_replacementPolicy_ptr->touch(m_chache[cacheSet][loc]);
 }
 
 void
@@ -371,7 +372,7 @@ CacheMemory::setMRU(Addr address, int occupancy)
                 touch(cacheSet, loc, curTick(), occupancy);
         } else {
             m_replacementPolicy_ptr->
-                touch(cacheSet, loc, curTick());
+                touch(m_cache[cacheSet][loc]);
         }
     }
 }
