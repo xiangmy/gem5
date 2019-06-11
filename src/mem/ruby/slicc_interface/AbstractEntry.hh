@@ -31,13 +31,22 @@
 
 #include <iostream>
 
-#include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
+#include "mem/protocol/AccessPermission.hh"
 
-class AbstractEntry : public AbstractCacheEntry
+class AbstractEntry
 {
   public:
     AbstractEntry();
     virtual ~AbstractEntry() = 0;
+  
+   // Get/Set permission of the entry
+    AccessPermission getPermission() const;
+    void changePermission(AccessPermission new_perm);
+
+    virtual void print(std::ostream& out) const = 0;
+
+    AccessPermission m_Permission; // Access permission for this
+                                   // block, required by CacheMemory
 };
 
 inline std::ostream&
