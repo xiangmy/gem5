@@ -120,7 +120,7 @@ machine(MachineType:Directory, "Token protocol")
   // TYPES
 
   // DirectoryEntry
-  structure(Entry, desc="...", interface="AbstractEntry") {
+  structure(Entry, desc="...", interface="AbstractCacheEntry") {
     State DirectoryState,          desc="Directory state";
     int Tokens, default="max_tokens()", desc="Number of tokens for the line we're holding";
 
