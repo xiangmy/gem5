@@ -144,10 +144,8 @@ class MemberMethodCallExprAST(MethodCallExprAST):
                   return_type = obj_type.methods[methodId].return_type
 
         if str(obj_type) == "AbstractCacheEntry" or \
-           str(obj_type) == "AbstractEntry" or \
            ("interface" in obj_type and (
-            obj_type["interface"] == "AbstractCacheEntry" or
-            obj_type["interface"] == "AbstractEntry")):
+            obj_type["interface"] == "AbstractCacheEntry")):
             prefix = "%s((*(%s))." % (prefix, code)
         else:
             prefix = "%s((%s)." % (prefix, code)

@@ -43,6 +43,7 @@ class MemberExprAST(ExprAST):
 
         if str(return_type) == "TBE" \
            or ("interface" in return_type and
+#            (return_type["interface"] == "AbstractCacheEntry")):
             (return_type["interface"] == "AbstractCacheEntry" or
              return_type["interface"] == "AbstractEntry")):
             code("(*$gcode).m_${{self.field}}")
