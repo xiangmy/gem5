@@ -65,7 +65,7 @@ struct ReplacementData
  */
 class ReplaceableEntry
 {
-  private:
+  protected:
     /**
      * Set to which this entry belongs.
      */

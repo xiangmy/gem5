@@ -413,9 +413,16 @@ CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
                 }
 
                 if (request_type != RubyRequestType_NULL) {
+                    Tick lastAccessTick;
+                    if (m_replacementPolicy_ptr->useOccupancy()) {
+                        lastAccessTick = m_replacementPolicy_ptr->
+                               getLastAccess(m_cache[i][j]->replacementData);
+                    } else {
+                        lastAccessTick = m_replacementPolicy_ptr->
+                                                         getLastAccess(i, j);
+                    }
                     tr->addRecord(cntrl, m_cache[i][j]->m_Address,
-                                  0, request_type,
-                                  m_replacementPolicy_ptr->getLastAccess(i, j),
+                                  0, request_type, lastAccessTick,
                                   m_cache[i][j]->getDataBlk());
                     warmedUpBlocks++;
                 }

@@ -49,6 +49,7 @@ class WeightedLRUPolicy : public AbstractReplacementPolicy
     WeightedLRUPolicy(const Params* p);
     ~WeightedLRUPolicy();
 
+    using AbstractReplacementPolicy::touch;
     void touch(int64_t set, int64_t way, Tick time) override;
     void touch(int64_t set, int64_t way, Tick time, int occupancy);
     int64_t getVictim(int64_t set) const override;
