@@ -55,7 +55,7 @@ class LFURP : public BaseReplacementPolicy
         /**
          * Default constructor. Invalidate data.
          */
-        LFUReplData() : refCount(0) {}
+        LFUReplData() : ReplacementData(), refCount(0) {}
     };
 
   public:

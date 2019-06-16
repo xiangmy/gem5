@@ -45,7 +45,7 @@ MRURP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 const
 {
     // Reset last touch timestamp
-    std::static_pointer_cast<MRUReplData>(
+    std::static_pointer_cast<ReplacementData>(
         replacement_data)->lastTouchTick = Tick(0);
 }
 
@@ -53,7 +53,7 @@ void
 MRURP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     // Update last touch timestamp
-    std::static_pointer_cast<MRUReplData>(
+    std::static_pointer_cast<ReplacementData>(
         replacement_data)->lastTouchTick = curTick();
 }
 
@@ -61,7 +61,7 @@ void
 MRURP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     // Set last touch timestamp
-    std::static_pointer_cast<MRUReplData>(
+    std::static_pointer_cast<ReplacementData>(
         replacement_data)->lastTouchTick = curTick();
 }
 
@@ -75,9 +75,9 @@ MRURP::getVictim(const ReplacementCandidates& candidates) const
     ReplaceableEntry* victim = candidates[0];
     for (const auto& candidate : candidates) {
         // Update victim entry if necessary
-        if (std::static_pointer_cast<MRUReplData>(
+        if (std::static_pointer_cast<ReplacementData>(
                     candidate->replacementData)->lastTouchTick >
-                std::static_pointer_cast<MRUReplData>(
+                std::static_pointer_cast<ReplacementData>(
                     victim->replacementData)->lastTouchTick) {
             victim = candidate;
         }
@@ -89,7 +89,7 @@ MRURP::getVictim(const ReplacementCandidates& candidates) const
 std::shared_ptr<ReplacementData>
 MRURP::instantiateEntry()
 {
-    return std::shared_ptr<ReplacementData>(new MRUReplData());
+    return std::shared_ptr<ReplacementData>(new ReplacementData());
 }
 
 MRURP*

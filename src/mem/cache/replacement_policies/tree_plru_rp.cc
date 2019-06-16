@@ -93,7 +93,7 @@ isRightSubtree(const uint64_t index)
 
 TreePLRURP::TreePLRUReplData::TreePLRUReplData(
     const uint64_t index, std::shared_ptr<PLRUTree> tree)
-    : index(index), tree(tree)
+    : ReplacementData(), index(index), tree(tree)
 {
 }
 
