@@ -63,8 +63,6 @@ class LocalVariableAST(StatementAST):
         if self.pointer or str(type) == "TBE" or (
            "interface" in type and (
                type["interface"] == "AbstractCacheEntry")):
-#               type["interface"] == "AbstractCacheEntry" or
-#               type["interface"] == "AbstractEntry")):
             code += "%s* %s" % (type.c_ident, ident)
         else:
             code += "%s %s" % (type.c_ident, ident)

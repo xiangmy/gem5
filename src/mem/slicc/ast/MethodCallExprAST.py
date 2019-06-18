@@ -152,7 +152,6 @@ class MemberMethodCallExprAST(MethodCallExprAST):
 
         return obj_type, methodId, prefix
 
-
 class ClassMethodCallExprAST(MethodCallExprAST):
     def __init__(self, slicc, type_ast, proc_name, expr_ast_vec):
         s = super(ClassMethodCallExprAST, self)

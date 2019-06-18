@@ -123,7 +123,7 @@ machine(MachineType:L2Cache, "Token protocol")
     DataBlock DataBlk,       desc="data for the block";
   }
 
-  structure(DirEntry, desc="...", interface="AbstractEntry") {
+  structure(DirEntry, desc="...", interface="AbstractCacheEntry") {
     Set Sharers,            desc="Set of the internal processors that want the block in shared state";
     bool exclusive, default="false", desc="if local exclusive is likely";
   }

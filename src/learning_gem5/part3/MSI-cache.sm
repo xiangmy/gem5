@@ -151,7 +151,7 @@ machine(MachineType:L1Cache, "MSI cache")
     // A structure for the cache entry. This stores the cache data and state
     // as defined above. You can put any other information here you like.
     // The AbstractCacheEntry is defined in
-    // src/mem/ruby/slic_interface/AbstractCacheEntry.hh
+    // src/mem/ruby/slicc_interface/AbstractCacheEntry.hh
     // If you want to use any of the functions in the abstract entry declare
     // them here.
     structure(Entry, desc="Cache entry", interface="AbstractCacheEntry") {
