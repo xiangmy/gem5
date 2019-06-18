@@ -39,7 +39,7 @@ class AbstractEntry
     AbstractEntry();
     virtual ~AbstractEntry() = 0;
 
-    // Get/Set permission of the entry
+   // Get/Set permission of the entry
     AccessPermission getPermission() const;
     void changePermission(AccessPermission new_perm);
 

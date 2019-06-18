@@ -51,9 +51,8 @@ AbstractCacheEntry::getPermission() const
 void
 AbstractCacheEntry::changePermission(AccessPermission new_perm)
 {
-//    changePermission_helper(new_perm);
-   m_Permission = new_perm;
-   if ((new_perm == AccessPermission_Invalid) ||
+    m_Permission = new_perm;
+    if ((new_perm == AccessPermission_Invalid) ||
         (new_perm == AccessPermission_NotPresent)) {
         m_locked = -1;
     }
