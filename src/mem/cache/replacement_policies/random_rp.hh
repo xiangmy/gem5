@@ -56,7 +56,7 @@ class RandomRP : public BaseReplacementPolicy
         /**
          * Default constructor. Invalidate data.
          */
-        RandomReplData() : valid(false) {}
+        RandomReplData() : ReplacementData(), valid(false) {}
     };
 
   public:

@@ -43,19 +43,6 @@ struct LRURPParams;
 
 class LRURP : public BaseReplacementPolicy
 {
-  protected:
-    /** LRU-specific implementation of replacement data. */
-    struct LRUReplData : ReplacementData
-    {
-        /** Tick on which the entry was last touched. */
-        Tick lastTouchTick;
-
-        /**
-         * Default constructor. Invalidate data.
-         */
-        LRUReplData() : lastTouchTick(0) {}
-    };
-
   public:
     /** Convenience typedef. */
     typedef LRURPParams Params;
