@@ -27,7 +27,7 @@
  */
 
 /**
- * This file contains the directory controller of a simple example MSI protocol
+ * This file contains the direcotry controller of a simple example MSI protocol
  *
  * In Ruby the directory controller both contains the directory coherence state
  * but also functions as the memory controller in many ways. There are states
@@ -41,7 +41,7 @@
  * Table 8.2 contains the transitions and actions found in this file and
  * section 8.2.4 explains the protocol in detail.
  *
- * See Learning gem5 Part 3: Ruby for more details.
+ * See Learning gem5 Part 6: Ruby for more details.
  *
  * Authors: Jason Lowe-Power
  */
@@ -80,9 +80,9 @@ machine(MachineType:Directory, "Directory protocol")
     MessageBuffer *responseFromMemory;
 
 {
-    // For many things in SLICC you can specify a default. However, this
-    // default must use the C++ name (mangled SLICC name). For the state below
-    // you have to use the controller name and the name we use for states.
+    // For many thins in SLICC you can specify a default. However, this default
+    // must use the C++ name (mangled SLICC name). For the state below you have
+    // to use the controller name and the name we use for states.
     state_declaration(State, desc="Directory states",
                       default="Directory_State_I") {
         // Stable states.
@@ -101,7 +101,7 @@ machine(MachineType:Directory, "Directory protocol")
 
         // Waiting for write-ack from memory
         MI_m, AccessPermission:Busy,       desc="Moving to I waiting for ack";
-        SS_m, AccessPermission:Busy,       desc="Moving to S waiting for ack";
+        SS_m, AccessPermission:Busy,       desc="Moving to I waiting for ack";
     }
 
     enumeration(Event, desc="Directory events") {
@@ -150,7 +150,7 @@ machine(MachineType:Directory, "Directory protocol")
     // Functions that we need to define/override to use our specific structures
     // in this implementation.
     // NOTE: we don't have TBE in this machine, so we don't need to pass it
-    // to these overridden functions.
+    // to these overriden functions.
 
     State getState(Addr addr) {
         if (directory.isPresent(addr)) {
@@ -241,7 +241,7 @@ machine(MachineType:Directory, "Directory protocol")
     in_port(request_in, RequestMsg, requestFromCache) {
         if (request_in.isReady(clockEdge())) {
             peek(request_in, RequestMsg) {
-                Entry entry := getDirectoryEntry(in_msg.addr);
+                Entry e := getDirectoryEntry(in_msg.addr);
                 if (in_msg.Type == CoherenceRequestType:GetS) {
                     // NOTE: Since we don't have a TBE in this machine, there
                     // is no need to pass a TBE into trigger. Also, for the
@@ -250,17 +250,17 @@ machine(MachineType:Directory, "Directory protocol")
                 } else if (in_msg.Type == CoherenceRequestType:GetM) {
                     trigger(Event:GetM, in_msg.addr);
                 } else if (in_msg.Type == CoherenceRequestType:PutS) {
-                    assert(is_valid(entry));
+                    assert(is_valid(e));
                     // If there is only a single sharer (i.e., the requestor)
-                    if (entry.Sharers.count() == 1) {
-                        assert(entry.Sharers.isElement(in_msg.Requestor));
+                    if (e.Sharers.count() == 1) {
+                        assert(e.Sharers.isElement(in_msg.Requestor));
                         trigger(Event:PutSLast, in_msg.addr);
                     } else {
                         trigger(Event:PutSNotLast, in_msg.addr);
                     }
                 } else if (in_msg.Type == CoherenceRequestType:PutM) {
-                    assert(is_valid(entry));
-                    if (entry.Owner.isElement(in_msg.Requestor)) {
+                    assert(is_valid(e));
+                    if (e.Owner.isElement(in_msg.Requestor)) {
                         trigger(Event:PutMOwner, in_msg.addr);
                     } else {
                         trigger(Event:PutMNonOwner, in_msg.addr);

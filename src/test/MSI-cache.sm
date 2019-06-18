@@ -37,7 +37,7 @@
  * Table 8.1 contains the transitions and actions found in this file and
  * section 8.2.4 explains the protocol in detail.
  *
- * See Learning gem5 Part 3: Ruby for more details.
+ * See Learning gem5 Part 6: Ruby for more details.
  *
  * Authors: Jason Lowe-Power
  */
@@ -74,8 +74,7 @@ machine(MachineType:L1Cache, "MSI cache")
       MessageBuffer * mandatoryQueue;
 {
     // Declare the states that this cache will use. These are both stable
-    // states (no underscore) and transient states (with underscore). Letters
-    // after the underscores are superscript in Sorin et al.
+    // states (no underscore) and transient states (with underscore).
     // Underscores and "desc" are used when generating HTML tables.
     // Access permissions are used for functional accesses. For reads, the
     // functional access reads *all* of the blocks with a matching address that
@@ -144,7 +143,7 @@ machine(MachineType:L1Cache, "MSI cache")
         DataOwner,      desc="Data from owner";
         InvAck,         desc="Invalidation ack from other cache after Inv";
 
-        // Special internally triggered event to simplify implementation
+        // Special event to simplify implementation
         LastInvAck,     desc="Triggered after the last ack is received";
     }
 
@@ -203,10 +202,8 @@ machine(MachineType:L1Cache, "MSI cache")
     void unset_tbe();
 
     // Given an address and machine type this queries the network to check
-    // where it should be sent. In a real implementation, this might be fixed
+    // where it should be sent. In a real implementation, this would be fixed
     // at design time, but this function gives us flexibility at runtime.
-    // For example, if you have multiple memory channels, this function will
-    // tell you which addresses to send to which memory controller.
     MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
     // Convience function to look up the cache entry.
@@ -234,8 +231,6 @@ machine(MachineType:L1Cache, "MSI cache")
     // Required function for setting the current state of the block.
     // This is called from the transition to set the ending state.
     // Needs to set both the TBE and the cache entry state.
-    // This is also called when transitioning to I so it's possible the TBE and/
-    // or the cache_entry is invalid.
     void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
       if (is_valid(tbe)) { tbe.TBEState := state; }
       if (is_valid(cache_entry)) { cache_entry.CacheState := state; }
@@ -279,26 +274,24 @@ machine(MachineType:L1Cache, "MSI cache")
     }
 
     int functionalWrite(Addr addr, Packet *pkt) {
+        int num_functional_writes := 0;
+
         TBE tbe := TBEs[addr];
         if(is_valid(tbe)) {
-            if (testAndWrite(addr, tbe.DataBlk, pkt)) {
-                return 1;
-            } else {
-                return 0;
-            }
-        } else {
-            if (testAndWrite(addr, getCacheEntry(addr).DataBlk, pkt)) {
-                return 1;
-            } else {
-                return 0;
-            }
+            num_functional_writes := num_functional_writes +
+                testAndWrite(addr, tbe.DataBlk, pkt);
+            return num_functional_writes;
         }
+
+        num_functional_writes := num_functional_writes +
+                testAndWrite(addr, getCacheEntry(addr).DataBlk, pkt);
+        return num_functional_writes;
     }
 
     /*************************************************************************/
     // Input/output network definitions
 
-    // Output ports. This defines the message types that will flow ocross the
+    // Output ports. This defines the message types that will flow across the
     // output buffers as defined above. These must be "to" networks.
     // "request_out" is the name we'll use later to send requests.
     // "RequestMsg" is the message type we will send (see MSI-msg.sm)
@@ -323,10 +316,10 @@ machine(MachineType:L1Cache, "MSI cache")
         // message at the head. The code in in_port is executed either way.
         if (response_in.isReady(clockEdge())) {
             // Peek is a special function. Any code inside a peek statement has
-            // a special variable declared and populated: in_msg. This contains
-            // the message (of type RequestMsg in this case) at the head.
-            // "forward_in" is the port we want to peek into
-            // "RequestMsg" is the type of message we expect.
+            // a special varible declared and populated: in_msg. This contains
+            // the message (of type ResponseMsg in this case) at the head.
+            // "response_in" is the port we want to peek into
+            // "ResponseMsg" is the type of message we expect.
             peek(response_in, ResponseMsg) {
                 // Grab the entry and tbe if they exist.
                 Entry cache_entry := getCacheEntry(in_msg.addr);
@@ -347,6 +340,9 @@ machine(MachineType:L1Cache, "MSI cache")
                     // dir resp yet. So, if this is 0 we don't need to wait
                     assert(in_msg.Acks + tbe.AcksOutstanding >= 0);
                     if (in_msg.Acks + tbe.AcksOutstanding == 0) {
+                        // This is a special function that will trigger a
+                        // transition (as defined below). It *must* have these
+                        // parameters.
                         trigger(Event:DataDirNoAcks, in_msg.addr, cache_entry,
                                 tbe);
                     } else {
@@ -389,9 +385,6 @@ machine(MachineType:L1Cache, "MSI cache")
                 TBE tbe := TBEs[in_msg.addr];
 
                 if (in_msg.Type == CoherenceRequestType:GetS) {
-                    // This is a special function that will trigger a
-                    // transition (as defined below). It *must* have these
-                    // parameters.
                     trigger(Event:FwdGetS, in_msg.addr, cache_entry, tbe);
                 } else if (in_msg.Type == CoherenceRequestType:GetM) {
                     trigger(Event:FwdGetM, in_msg.addr, cache_entry, tbe);
@@ -439,7 +432,7 @@ machine(MachineType:L1Cache, "MSI cache")
                         trigger(Event:Store, in_msg.LineAddress, cache_entry,
                                 tbe);
                     } else {
-                        error("Unexpected type from processor");
+                        error("Unexected type from processor");
                     }
                 }
             }
@@ -665,6 +658,12 @@ machine(MachineType:L1Cache, "MSI cache")
         unset_tbe();
     }
 
+    action(copyDataFromCacheToTBE, "Dct", desc="Copy data from cache to TBE") {
+        assert(is_valid(cache_entry));
+        assert(is_valid(tbe));
+        tbe.DataBlk := cache_entry.DataBlk;
+    }
+
     // Queue management actions
 
     action(popMandatoryQueue, "pQ", desc="Pop the mandatory queue") {
@@ -730,7 +729,7 @@ machine(MachineType:L1Cache, "MSI cache")
         stall;
     }
 
-    // Similarly, on either DataDirNoAcks or DataOwner we should go to S
+    // Similarly, on wither DataDirNoAcks or DataOwner we should go to S
     transition(IS_D, {DataDirNoAcks, DataOwner}, S) {
         writeDataToCache;
         deallocateTBE;
@@ -783,7 +782,6 @@ machine(MachineType:L1Cache, "MSI cache")
 
     transition(S, Inv, I) {
         sendInvAcktoReq;
-        forwardEviction;
         deallocateCacheBlock;
         popForwardQueue;
     }
@@ -805,7 +803,6 @@ machine(MachineType:L1Cache, "MSI cache")
 
     transition(M, Store) {
         storeHit;
-        forwardEviction;
         popMandatoryQueue;
     }
 
