@@ -71,11 +71,11 @@ class AbstractCacheEntry : public ReplaceableEntry
     void clearLocked();
     bool isLocked(int context) const;
 
-    void setSetIndex(uint32_t s) { _set = s; }
-    uint32_t getSetIndex() const { return _set; }
+    void setSetIndex(uint32_t s) { setPosition(s, getWay()); }
+    uint32_t getSetIndex() const { return getSet(); }
 
-    void setWayIndex(uint32_t s) { _way = s; }
-    uint32_t getWayIndex() const { return _way; }
+    void setWayIndex(uint32_t s) { setPosition(getSet(), s); }
+    uint32_t getWayIndex() const { return getWay(); }
 
     // Address of this block, required by CacheMemory
     Addr m_Address;
@@ -84,7 +84,7 @@ class AbstractCacheEntry : public ReplaceableEntry
     int m_locked;
 
     AccessPermission m_Permission; // Access permission for this
-                                     // block, required by CacheMemory
+                                   // block, required by CacheMemory
 };
 
 inline std::ostream&
