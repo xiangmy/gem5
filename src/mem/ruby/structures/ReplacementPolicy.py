@@ -29,7 +29,7 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5.objects.ReplacementPolicies import BaseReplacementPolicy
+from m5.objects.ReplacementPolicies import *
 
 class ReplacementPolicy(BaseReplacementPolicy):
     type = 'ReplacementPolicy'

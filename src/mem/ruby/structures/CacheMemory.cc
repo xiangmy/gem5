@@ -65,7 +65,7 @@ CacheMemory::CacheMemory(const Params *p)
     m_cache_size = p->size;
     m_cache_assoc = p->assoc;
     m_replacementPolicy_ptr = p->replacement_policy;
-    m_replacementPolicy_ptr->setCache(this);
+    //m_replacementPolicy_ptr->setCache(this);
     m_start_index_bit = p->start_index_bit;
     m_is_instruction_only_cache = p->is_icache;
     m_resource_stalls = p->resourceStalls;
@@ -170,11 +170,7 @@ CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
     if (loc != -1) {
         // Do we even have a tag match?
         AbstractCacheEntry* entry = m_cache[cacheSet][loc];
-        if (m_replacementPolicy_ptr->useOccupancy()) {
-            m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
-        } else {
-            m_replacementPolicy_ptr->touch(entry->replacementData);
-        }
+        m_replacementPolicy_ptr->touch(entry->replacementData);
         data_ptr = &(entry->getDataBlk());
 
         if (entry->m_Permission == AccessPermission_Read_Write) {
@@ -202,11 +198,7 @@ CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
     if (loc != -1) {
         // Do we even have a tag match?
         AbstractCacheEntry* entry = m_cache[cacheSet][loc];
-        if (m_replacementPolicy_ptr->useOccupancy()) {
-        m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
-        } else {
-            m_replacementPolicy_ptr->touch(entry->replacementData);
-        }
+        m_replacementPolicy_ptr->touch(entry->replacementData);
         data_ptr = &(entry->getDataBlk());
 
         return m_cache[cacheSet][loc]->m_Permission !=
@@ -290,12 +282,8 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry, bool touch)
             entry->setWayIndex(i);
 
             if (touch) {
-                if (m_replacementPolicy_ptr->useOccupancy()) {
-                    m_replacementPolicy_ptr->touch(cacheSet, i, curTick());
-                } else {
-                    m_replacementPolicy_ptr->
+                m_replacementPolicy_ptr->
                               touch(m_cache[cacheSet][i]->replacementData);
-                }
             }
             return entry;
         }
@@ -326,17 +314,12 @@ CacheMemory::cacheProbe(Addr address) const
     assert(!cacheAvail(address));
 
     int64_t cacheSet = addressToCacheSet(address);
-    if (m_replacementPolicy_ptr->useOccupancy()) {
-        return m_cache[cacheSet][m_replacementPolicy_ptr->getVictim(cacheSet)]
-->m_Address;
-    } else {
-        std::vector<ReplaceableEntry*> candidates;
-        for (auto entry : m_cache[cacheSet]) {
-            candidates.push_back(static_cast<ReplaceableEntry*>(entry));
-        }
-        return m_cache[cacheSet][m_replacementPolicy_ptr->
-                            getVictim(candidates)->getWay()]->m_Address;
+    std::vector<ReplaceableEntry*> candidates;
+    for (auto entry : m_cache[cacheSet]) {
+        candidates.push_back(static_cast<ReplaceableEntry*>(entry));
     }
+    return m_cache[cacheSet][m_replacementPolicy_ptr->
+                        getVictim(candidates)->getWay()]->m_Address;
 }
 
 // looks an address up in the cache
@@ -369,12 +352,8 @@ CacheMemory::setMRU(Addr address)
     int loc = findTagInSet(cacheSet, address);
 
     if (loc != -1){
-        if (m_replacementPolicy_ptr->useOccupancy()) {
-            m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
-        } else {
-            m_replacementPolicy_ptr->
+        m_replacementPolicy_ptr->
                       touch(m_cache[cacheSet][loc]->replacementData);
-        }
     }
 }
 
@@ -383,12 +362,8 @@ CacheMemory::setMRU(const AbstractCacheEntry *e)
 {
     uint32_t cacheSet = e->getSetIndex();
     uint32_t loc = e->getWayIndex();
-    if (m_replacementPolicy_ptr->useOccupancy()) {
-        m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
-    } else {
-        m_replacementPolicy_ptr->
+    m_replacementPolicy_ptr->
                   touch(m_cache[cacheSet][loc]->replacementData);
-    }
 }
 
 void
@@ -400,7 +375,8 @@ CacheMemory::setMRU(Addr address, int occupancy)
     if (loc != -1) {
         if (m_replacementPolicy_ptr->useOccupancy()) {
             (static_cast<WeightedLRUPolicy*>(m_replacementPolicy_ptr))->
-                touch(cacheSet, loc, curTick(), occupancy);
+                touch(m_cache[cacheSet][loc]->replacementData,
+                                           curTick(), occupancy);
         } else {
             m_replacementPolicy_ptr->
                   touch(m_cache[cacheSet][loc]->replacementData);
@@ -446,13 +422,8 @@ CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
 
                 if (request_type != RubyRequestType_NULL) {
                     Tick lastAccessTick;
-                    if (m_replacementPolicy_ptr->useOccupancy()) {
-                        lastAccessTick = m_replacementPolicy_ptr->
+                    lastAccessTick = m_replacementPolicy_ptr->
                                getLastAccess(m_cache[i][j]->replacementData);
-                    } else {
-                        lastAccessTick = m_replacementPolicy_ptr->
-                                                         getLastAccess(i, j);
-                    }
                     tr->addRecord(cntrl, m_cache[i][j]->m_Address,
                                   0, request_type, lastAccessTick,
                                   m_cache[i][j]->getDataBlk());
