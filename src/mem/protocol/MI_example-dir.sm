@@ -86,7 +86,7 @@ machine(MachineType:Directory, "Directory protocol")
   structure(Entry, desc="...", interface="AbstractCacheEntry") {
     State DirectoryState,          desc="Directory state";
     NetDest Sharers,                   desc="Sharers for this block";
-    NetDest Owner,                     desc="Owner of this block";
+    NetDest Owner,                     desc="Owner of this block"; 
   }
 
   // TBE entries for DMA requests
@@ -126,7 +126,7 @@ machine(MachineType:Directory, "Directory protocol")
     return dir_entry;
   }
  
-  State getState(TBE tbe, Addr addr) {
+  State getState(TBE tbe, Entry dir_entry, Addr addr) {
     if (is_valid(tbe)) {
       return tbe.TBEState;
     } else if (directory.isPresent(addr)) {
@@ -136,7 +136,7 @@ machine(MachineType:Directory, "Directory protocol")
     }
   }
 
-  void setState(TBE tbe, Addr addr, State state) {
+  void setState(TBE tbe, Entry dir_entry, Addr addr, State state) {
 
     if (is_valid(tbe)) {
       tbe.TBEState := state;
@@ -171,7 +171,7 @@ machine(MachineType:Directory, "Directory protocol")
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Addr addr, State state) {
+  void setAccessPermission(Entry dir_entry, Addr addr, State state) {
     if (directory.isPresent(addr)) {
       getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
     }
@@ -209,11 +209,12 @@ machine(MachineType:Directory, "Directory protocol")
   in_port(dmaRequestQueue_in, DMARequestMsg, dmaRequestToDir) {
     if (dmaRequestQueue_in.isReady(clockEdge())) {
       peek(dmaRequestQueue_in, DMARequestMsg) {
+        Entry dir_entry := getDirectoryEntry(in_msg.LineAddress);
         TBE tbe := TBEs[in_msg.LineAddress];
-        if (in_msg.Type == DMARequestType:READ) {
-          trigger(Event:DMA_READ, in_msg.LineAddress, tbe);
+        if (in_msg.Type == DMARequestType:READ) {	
+          trigger(Event:DMA_READ, in_msg.LineAddress, dir_entry, tbe);
         } else if (in_msg.Type == DMARequestType:WRITE) {
-          trigger(Event:DMA_WRITE, in_msg.LineAddress, tbe);
+          trigger(Event:DMA_WRITE, in_msg.LineAddress, dir_entry, tbe);
         } else {
           error("Invalid message");
         }
@@ -224,16 +225,17 @@ machine(MachineType:Directory, "Directory protocol")
   in_port(requestQueue_in, RequestMsg, requestToDir) {
     if (requestQueue_in.isReady(clockEdge())) {
       peek(requestQueue_in, RequestMsg) {
+        Entry dir_entry := getDirectoryEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
         if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:GETS, in_msg.addr, tbe);
+          trigger(Event:GETS, in_msg.addr, dir_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GETX) {
-          trigger(Event:GETX, in_msg.addr, tbe);
+          trigger(Event:GETX, in_msg.addr, dir_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:PUTX) {
           if (getDirectoryEntry(in_msg.addr).Owner.isElement(in_msg.Requestor)) {
-            trigger(Event:PUTX, in_msg.addr, tbe);
+            trigger(Event:PUTX, in_msg.addr, dir_entry, tbe);
           } else {
-            trigger(Event:PUTX_NotOwner, in_msg.addr, tbe);
+            trigger(Event:PUTX_NotOwner, in_msg.addr, dir_entry, tbe);
           }
         } else {
           error("Invalid message");
@@ -247,11 +249,12 @@ machine(MachineType:Directory, "Directory protocol")
   in_port(memQueue_in, MemoryMsg, responseFromMemory) {
     if (memQueue_in.isReady(clockEdge())) {
       peek(memQueue_in, MemoryMsg) {
+        Entry dir_entry := getDirectoryEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.addr, tbe);
+          trigger(Event:Memory_Data, in_msg.addr, dir_entry, tbe);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.addr, tbe);
+          trigger(Event:Memory_Ack, in_msg.addr, dir_entry, tbe);
         } else {
           DPRINTF(RubySlicc,"%s\n", in_msg.Type);
           error("Invalid message");
