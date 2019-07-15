@@ -75,7 +75,7 @@ class AbstractCacheEntry : public ReplaceableEntry
     uint32_t getSetIndex() const { return getSet(); }
 
     void setWayIndex(uint32_t s) { setPosition(getSet(), s); }
-    uint32_t getWayIndex() const { return getWay() }
+    uint32_t getWayIndex() const { return getWay(); }
 
     // Address of this block, required by CacheMemory
     Addr m_Address;
