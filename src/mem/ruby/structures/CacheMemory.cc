@@ -85,12 +85,6 @@ CacheMemory::init()
 
     m_cache.resize(m_cache_num_sets,
                     std::vector<AbstractCacheEntry*>(m_cache_assoc, nullptr));
-    for (int set = 0; set < m_cache_num_sets; ++set){
-        for (int assoc = 0; assoc < m_cache_assoc; ++assoc){
-            m_cache[set][assoc]->replacementData = m_replacementPolicy_ptr->
-                                                         instantiateEntry();
-        }
-    }
 }
 
 CacheMemory::~CacheMemory()
@@ -286,6 +280,8 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry, bool touch)
             m_tag_index[address] = i;
             entry->setSetIndex(cacheSet);
             entry->setWayIndex(i);
+            set[i]->replacementData =
+                               m_replacementPolicy_ptr->instantiateEntry();
 
             if (touch) {
                 m_replacementPolicy_ptr->
