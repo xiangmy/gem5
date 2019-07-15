@@ -36,7 +36,6 @@
 #ifndef __MEM_RUBY_SYSTEM_WEIGHTEDLRUPOLICY_HH__
 #define __MEM_RUBY_SYSTEM_WEIGHTEDLRUPOLICY_HH__
 
-//#include "mem/ruby/structures/AbstractReplacementPolicy.hh"
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/ruby/structures/CacheMemory.hh"
 #include "params/WeightedLRUReplacementPolicy.hh"

@@ -49,14 +49,6 @@ WeightedLRUReplacementPolicyParams::create()
     return new WeightedLRUPolicy(this);
 }
 
-//void
-//WeightedLRUPolicy::touch(int64_t set, int64_t index, Tick time)
-//{
-//    assert(index >= 0 && index < m_assoc);
-//    assert(set >= 0 && set < m_num_sets);
-//
-//    m_last_ref_ptr[set][index] = time;
-//}
 void
 WeightedLRUPolicy::touch(const std::shared_ptr<ReplacementData>&
                                         replacement_data, Tick time) const
@@ -73,17 +65,6 @@ WeightedLRUPolicy::touch(const std::shared_ptr<ReplacementData>&
                                                  lastTouchTick = curTick();
 }
 
-/*
-void
-WeightedLRUPolicy::touch(int64_t set, int64_t index, Tick time, int occupancy)
-{
-    assert(index >= 0 && index < m_assoc);
-    assert(set >= 0 && set < m_num_sets);
-
-    m_last_ref_ptr[set][index] = time;
-    m_last_occ_ptr[set][index] = occupancy;
-}
-*/
 void
 WeightedLRUPolicy::touch(const std::shared_ptr<ReplacementData>&
                         replacement_data, Tick time, int occupancy) const
@@ -94,39 +75,17 @@ WeightedLRUPolicy::touch(const std::shared_ptr<ReplacementData>&
                                                   last_occ_ptr = occupancy;
 }
 
-//int64_t
-//WeightedLRUPolicy::getVictim(int64_t set) const
-//{
-//    Tick time, smallest_time;
-//    int64_t smallest_index;
-//
-//    smallest_index = 0;
-//    smallest_time = m_last_ref_ptr[set][0];
-//    int smallest_weight = m_last_occ_ptr[set][0];
-//
-//    for (unsigned i = 1; i < m_assoc; i++) {
-//
-//        int weight = m_last_occ_ptr[set][i];
-//        if (weight < smallest_weight) {
-//            smallest_weight = weight;
-//            smallest_index = i;
-//            smallest_time = m_last_ref_ptr[set][i];
-//        } else if (weight == smallest_weight) {
-//            time = m_last_ref_ptr[set][i];
-//            if (time < smallest_time) {
-//                smallest_index = i;
-//                smallest_time = time;
-//            }
-//        }
-//    }
-//    return smallest_index;
-//}
 ReplaceableEntry*
 WeightedLRUPolicy::getVictim(const ReplacementCandidates& candidates) const
 {
     assert(candidates.size() > 0);
 
     ReplaceableEntry* victim = candidates[0];
+    /**
+     * Use weight (last_occ_ptr) to find victim.
+     * Evict the block that has the smallest weight.
+     * If two blocks have the same weight, evict the oldest one.
+     */
     for (const auto& candidate : candidates) {
         if (std::static_pointer_cast<WeightedLRUReplData>(
                     candidate->replacementData)->last_occ_ptr <
