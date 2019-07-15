@@ -278,8 +278,7 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry, bool touch)
                     address);
             set[i]->m_locked = -1;
             m_tag_index[address] = i;
-            entry->setSetIndex(cacheSet);
-            entry->setWayIndex(i);
+            entry->setPosition(cacheSet, i);
             set[i]->replacementData =
                                m_replacementPolicy_ptr->instantiateEntry();
 
@@ -362,8 +361,8 @@ CacheMemory::setMRU(Addr address)
 void
 CacheMemory::setMRU(const AbstractCacheEntry *e)
 {
-    uint32_t cacheSet = e->getSetIndex();
-    uint32_t loc = e->getWayIndex();
+    uint32_t cacheSet = e->getSet();
+    uint32_t loc = e->getWay();
     m_replacementPolicy_ptr->
                   touch(m_cache[cacheSet][loc]->replacementData);
 }
