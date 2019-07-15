@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-machine(MachineType:Directory, "Directory protocol") 
+machine(MachineType:Directory, "Directory protocol")
     : DirectoryMemory * directory;
       Cycles directory_latency := 12;
       Cycles to_memory_controller_latency := 1;
@@ -54,7 +54,7 @@ machine(MachineType:Directory, "Directory protocol")
     M_DRD, AccessPermission:Busy, desc="Blocked on an invalidation for a DMA read";
     M_DWR, AccessPermission:Busy, desc="Blocked on an invalidation for a DMA write";
 
-    M_DWRI, AccessPermission:Busy, desc="Intermediate state M_DWR-->I"; 
+    M_DWRI, AccessPermission:Busy, desc="Intermediate state M_DWR-->I";
     M_DRDI, AccessPermission:Busy, desc="Intermediate state M_DRD-->I";
 
     IM, AccessPermission:Busy, desc="Intermediate state I-->M";
@@ -86,7 +86,7 @@ machine(MachineType:Directory, "Directory protocol")
   structure(Entry, desc="...", interface="AbstractCacheEntry") {
     State DirectoryState,          desc="Directory state";
     NetDest Sharers,                   desc="Sharers for this block";
-    NetDest Owner,                     desc="Owner of this block"; 
+    NetDest Owner,                     desc="Owner of this block";
   }
 
   // TBE entries for DMA requests
@@ -125,12 +125,12 @@ machine(MachineType:Directory, "Directory protocol")
                               directory.allocate(addr, new Entry));
     return dir_entry;
   }
- 
+
   State getState(TBE tbe, Entry dir_entry, Addr addr) {
     if (is_valid(tbe)) {
       return tbe.TBEState;
     } else if (directory.isPresent(addr)) {
-      return getDirectoryEntry(addr).DirectoryState;
+      return dir_entry.DirectoryState;
     } else {
       return State:I;
     }
@@ -145,15 +145,15 @@ machine(MachineType:Directory, "Directory protocol")
     if (directory.isPresent(addr)) {
 
       if (state == State:M) {
-        assert(getDirectoryEntry(addr).Owner.count() == 1);
-        assert(getDirectoryEntry(addr).Sharers.count() == 0);
+        assert(dir_entry.Owner.count() == 1);
+        assert(dir_entry.Sharers.count() == 0);
       }
 
-      getDirectoryEntry(addr).DirectoryState := state;
-    
+      dir_entry.DirectoryState := state;
+
       if (state == State:I)  {
-        assert(getDirectoryEntry(addr).Owner.count() == 0);
-        assert(getDirectoryEntry(addr).Sharers.count() == 0);
+        assert(dir_entry.Owner.count() == 0);
+        assert(dir_entry.Sharers.count() == 0);
       }
     }
   }
@@ -173,7 +173,7 @@ machine(MachineType:Directory, "Directory protocol")
 
   void setAccessPermission(Entry dir_entry, Addr addr, State state) {
     if (directory.isPresent(addr)) {
-      getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
+      dir_entry.changePermission(Directory_State_to_permission(state));
     }
   }
 
@@ -211,7 +211,7 @@ machine(MachineType:Directory, "Directory protocol")
       peek(dmaRequestQueue_in, DMARequestMsg) {
         Entry dir_entry := getDirectoryEntry(in_msg.LineAddress);
         TBE tbe := TBEs[in_msg.LineAddress];
-        if (in_msg.Type == DMARequestType:READ) {	
+        if (in_msg.Type == DMARequestType:READ) {
           trigger(Event:DMA_READ, in_msg.LineAddress, dir_entry, tbe);
         } else if (in_msg.Type == DMARequestType:WRITE) {
           trigger(Event:DMA_WRITE, in_msg.LineAddress, dir_entry, tbe);
@@ -357,7 +357,7 @@ machine(MachineType:Directory, "Directory protocol")
         out_msg.PhysicalAddress := address;
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:ACK;
-        out_msg.Destination.add(tbe.DmaRequestor); 
+        out_msg.Destination.add(tbe.DmaRequestor);
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
   }
@@ -404,7 +404,7 @@ machine(MachineType:Directory, "Directory protocol")
   action(p_popIncomingDMARequestQueue, "p", desc="Pop incoming DMA queue") {
     dmaRequestQueue_in.dequeue(clockEdge());
   }
-  
+
   action(v_allocateTBE, "v", desc="Allocate TBE") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       TBEs.allocate(address);
@@ -493,7 +493,7 @@ machine(MachineType:Directory, "Directory protocol")
   transition({IM, MI, ID, ID_W}, {GETX, GETS, PUTX, PUTX_NotOwner} ) {
     z_recycleRequestQueue;
   }
- 
+
   transition({IM, MI, ID, ID_W}, {DMA_READ, DMA_WRITE} ) {
     y_recycleDMARequestQueue;
   }
@@ -549,7 +549,7 @@ machine(MachineType:Directory, "Directory protocol")
     p_popIncomingDMARequestQueue;
   }
 
-  transition(M_DRD, PUTX, M_DRDI) {     
+  transition(M_DRD, PUTX, M_DRDI) {
     drp_sendDMAData;
     c_clearOwner;
     l_queueMemoryWBRequest;
@@ -558,7 +558,7 @@ machine(MachineType:Directory, "Directory protocol")
 
   transition(M_DRDI, Memory_Ack, I) {
     l_sendWriteBackAck;
-    w_deallocateTBE;   
+    w_deallocateTBE;
     l_popMemQueue;
   }
 
