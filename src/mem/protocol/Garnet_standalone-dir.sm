@@ -55,7 +55,7 @@ machine(MachineType:Directory, "Garnet_standalone Directory")
 
   // TYPES
   // DirectoryEntry
-  structure(Entry, desc="...", interface="AbstractCacheEntry") {
+  structure(Entry, desc="...", interface="AbstractCacheEntry", main="false"){
     State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
   }
@@ -92,6 +92,7 @@ machine(MachineType:Directory, "Garnet_standalone Directory")
     if (requestQueue_in.isReady(clockEdge())) {
       peek(requestQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:MSG) {
+          // when using AbstractCacheEntry instead of AbstractEntry, need to pass an entry along, but Garnet doesn't have a corresponding directory entry
           trigger(Event:Receive_Request, in_msg.addr);
         } else {
           error("Invalid message");
@@ -103,6 +104,7 @@ machine(MachineType:Directory, "Garnet_standalone Directory")
     if (forwardQueue_in.isReady(clockEdge())) {
       peek(forwardQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:MSG) {
+          // when using AbstractCacheEntry instead of AbstractEntry, need to pass an entry along, but Garnet doesn't have a corresponding directory entry
           trigger(Event:Receive_Forward, in_msg.addr);
         } else {
           error("Invalid message");

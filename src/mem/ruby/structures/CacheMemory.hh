@@ -35,13 +35,13 @@
 #include <vector>
 
 #include "base/statistics.hh"
+#include "mem/cache/replacement_policies/base.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/CacheResourceType.hh"
 #include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
-#include "mem/ruby/structures/AbstractReplacementPolicy.hh"
 #include "mem/ruby/structures/BankedArray.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
 #include "params/RubyCache.hh"
@@ -173,7 +173,7 @@ class CacheMemory : public SimObject
     std::unordered_map<Addr, int> m_tag_index;
     std::vector<std::vector<AbstractCacheEntry*> > m_cache;
 
-    AbstractReplacementPolicy *m_replacementPolicy_ptr;
+    BaseReplacementPolicy *m_replacementPolicy_ptr;
 
     BankedArray dataArray;
     BankedArray tagArray;

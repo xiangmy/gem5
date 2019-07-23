@@ -33,7 +33,7 @@
 #include "base/logging.hh"
 
 AbstractReplacementPolicy::AbstractReplacementPolicy(const Params * p)
-  : SimObject(p)
+  : BaseReplacementPolicy(p)
 {
     m_num_sets = p->size/p->block_size/p->assoc;
     m_assoc = p->assoc;
