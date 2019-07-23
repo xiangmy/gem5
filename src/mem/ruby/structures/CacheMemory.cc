@@ -65,7 +65,6 @@ CacheMemory::CacheMemory(const Params *p)
     m_cache_size = p->size;
     m_cache_assoc = p->assoc;
     m_replacementPolicy_ptr = p->replacement_policy;
-    //m_replacementPolicy_ptr->setCache(this);
     m_start_index_bit = p->start_index_bit;
     m_is_instruction_only_cache = p->is_icache;
     m_resource_stalls = p->resourceStalls;
@@ -380,7 +379,7 @@ CacheMemory::setMRU(Addr address, int occupancy)
                                            curTick(), occupancy);
         } else {
             m_replacementPolicy_ptr->
-                  touch(m_cache[cacheSet][loc]->replacementData);
+                touch(m_cache[cacheSet][loc]->replacementData);
         }
     }
 }
