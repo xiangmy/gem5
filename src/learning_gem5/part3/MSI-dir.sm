@@ -152,25 +152,25 @@ machine(MachineType:Directory, "Directory protocol")
     // NOTE: we don't have TBE in this machine, so we don't need to pass it
     // to these overridden functions.
 
-    State getState(Addr addr) {
+    State getState(Entry dir_entry, Addr addr) {
         if (directory.isPresent(addr)) {
-            return getDirectoryEntry(addr).DirState;
+            return dir_entry.DirState;
         } else {
             return State:I;
         }
     }
 
-    void setState(Addr addr, State state) {
+    void setState(Entry dir_entry, Addr addr, State state) {
         if (directory.isPresent(addr)) {
             if (state == State:M) {
-                DPRINTF(RubySlicc, "Owner %s\n", getDirectoryEntry(addr).Owner);
-                assert(getDirectoryEntry(addr).Owner.count() == 1);
-                assert(getDirectoryEntry(addr).Sharers.count() == 0);
+                DPRINTF(RubySlicc, "Owner %s\n", dir_entry.Owner);
+                assert(dir_entry.Owner.count() == 1);
+                assert(dir_entry.Sharers.count() == 0);
             }
-            getDirectoryEntry(addr).DirState := state;
+            dir_entry.DirState := state;
             if (state == State:I)  {
-                assert(getDirectoryEntry(addr).Owner.count() == 0);
-                assert(getDirectoryEntry(addr).Sharers.count() == 0);
+                assert(dir_entry.Owner.count() == 0);
+                assert(dir_entry.Sharers.count() == 0);
             }
         }
     }
@@ -185,9 +185,8 @@ machine(MachineType:Directory, "Directory protocol")
             return AccessPermission:NotPresent;
         }
     }
-    void setAccessPermission(Addr addr, State state) {
+    void setAccessPermission(Entry e, Addr addr, State state) {
         if (directory.isPresent(addr)) {
-            Entry e := getDirectoryEntry(addr);
             e.changePermission(Directory_State_to_permission(state));
         }
     }
@@ -215,10 +214,11 @@ machine(MachineType:Directory, "Directory protocol")
     in_port(memQueue_in, MemoryMsg, responseFromMemory) {
         if (memQueue_in.isReady(clockEdge())) {
             peek(memQueue_in, MemoryMsg) {
+                Entry entry := getDirectoryEntry(in_msg.addr);
                 if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-                    trigger(Event:MemData, in_msg.addr);
+                    trigger(Event:MemData, in_msg.addr, entry);
                 } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-                    trigger(Event:MemAck, in_msg.addr);
+                    trigger(Event:MemAck, in_msg.addr, entry);
                 } else {
                     error("Invalid message");
                 }
@@ -229,8 +229,9 @@ machine(MachineType:Directory, "Directory protocol")
     in_port(response_in, ResponseMsg, responseFromCache) {
         if (response_in.isReady(clockEdge())) {
             peek(response_in, ResponseMsg) {
+                Entry entry := getDirectoryEntry(in_msg.addr);
                 if (in_msg.Type == CoherenceResponseType:Data) {
-                    trigger(Event:Data, in_msg.addr);
+                    trigger(Event:Data, in_msg.addr, entry);
                 } else {
                     error("Unexpected message type.");
                 }
@@ -246,24 +247,24 @@ machine(MachineType:Directory, "Directory protocol")
                     // NOTE: Since we don't have a TBE in this machine, there
                     // is no need to pass a TBE into trigger. Also, for the
                     // directory there is no cache entry.
-                    trigger(Event:GetS, in_msg.addr);
+                    trigger(Event:GetS, in_msg.addr, entry);
                 } else if (in_msg.Type == CoherenceRequestType:GetM) {
-                    trigger(Event:GetM, in_msg.addr);
+                    trigger(Event:GetM, in_msg.addr, entry);
                 } else if (in_msg.Type == CoherenceRequestType:PutS) {
                     assert(is_valid(entry));
                     // If there is only a single sharer (i.e., the requestor)
                     if (entry.Sharers.count() == 1) {
                         assert(entry.Sharers.isElement(in_msg.Requestor));
-                        trigger(Event:PutSLast, in_msg.addr);
+                        trigger(Event:PutSLast, in_msg.addr, entry);
                     } else {
-                        trigger(Event:PutSNotLast, in_msg.addr);
+                        trigger(Event:PutSNotLast, in_msg.addr, entry);
                     }
                 } else if (in_msg.Type == CoherenceRequestType:PutM) {
                     assert(is_valid(entry));
                     if (entry.Owner.isElement(in_msg.Requestor)) {
-                        trigger(Event:PutMOwner, in_msg.addr);
+                        trigger(Event:PutMOwner, in_msg.addr, entry);
                     } else {
-                        trigger(Event:PutMNonOwner, in_msg.addr);
+                        trigger(Event:PutMNonOwner, in_msg.addr, entry);
                     }
                 } else {
                     error("Unexpected message type.");
