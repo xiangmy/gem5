@@ -117,7 +117,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     return dir_entry;
   }
 
-  State getState(TBE tbe, Addr addr) {
+  State getState(TBE tbe, Entry dir_entry, Addr addr) {
     if (is_valid(tbe)) {
       return tbe.TBEState;
     } else if (directory.isPresent(addr)) {
@@ -127,7 +127,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     }
   }
 
-  void setState(TBE tbe, Addr addr, State state) {
+  void setState(TBE tbe, Entry dir_entry, Addr addr, State state) {
     if (is_valid(tbe)) {
       tbe.TBEState := state;
     }
@@ -175,7 +175,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     return num_functional_writes;
   }
 
-  void setAccessPermission(Addr addr, State state) {
+  void setAccessPermission(Entry dir_entry, Addr addr, State state) {
     if (directory.isPresent(addr)) {
       getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
     }
@@ -195,14 +195,15 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   in_port(requestNetwork_in, RequestMsg, requestToDir, rank = 0) {
     if (requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg) {
+        Entry dir_entry := getDirectoryEntry(in_msg.addr);
         assert(in_msg.Destination.isElement(machineID));
         if (isGETRequest(in_msg.Type)) {
-          trigger(Event:Fetch, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:Fetch, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
-          trigger(Event:DMA_READ, makeLineAddress(in_msg.addr),
+          trigger(Event:DMA_READ, makeLineAddress(in_msg.addr), dir_entry,
                   TBEs[makeLineAddress(in_msg.addr)]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_WRITE) {
-          trigger(Event:DMA_WRITE, makeLineAddress(in_msg.addr),
+          trigger(Event:DMA_WRITE, makeLineAddress(in_msg.addr), dir_entry,
                   TBEs[makeLineAddress(in_msg.addr)]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg);
@@ -215,11 +216,12 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   in_port(responseNetwork_in, ResponseMsg, responseToDir, rank = 1) {
     if (responseNetwork_in.isReady(clockEdge())) {
       peek(responseNetwork_in, ResponseMsg) {
+        Entry dir_entry := getDirectoryEntry(in_msg.addr);
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceResponseType:MEMORY_DATA) {
-          trigger(Event:Data, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:Data, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceResponseType:ACK) {
-          trigger(Event:CleanReplacement, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:CleanReplacement, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
@@ -232,10 +234,11 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   in_port(memQueue_in, MemoryMsg, responseFromMemory, rank = 2) {
     if (memQueue_in.isReady(clockEdge())) {
       peek(memQueue_in, MemoryMsg) {
+      Entry dir_entry := getDirectoryEntry(in_msg.addr);
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:Memory_Data, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:Memory_Ack, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
