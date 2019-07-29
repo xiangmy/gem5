@@ -56,6 +56,7 @@ class VIPERCoalescerParams;
 class VIPERCoalescer : public GPUCoalescer
 {
   public:
+    Cycles m_data_cache_hit_latency;
     typedef VIPERCoalescerParams Params;
     VIPERCoalescer(const Params *);
     ~VIPERCoalescer();
