@@ -159,9 +159,6 @@ class StateMachine(Symbol):
             if "main" in type and "false" == type["main"].lower():
                 pass # this isn't the EntryType
             else:
-                if self.EntryType != None:
-                    self.error("Multiple AbstractCacheEntry types in a " \
-                               "single machine.");
                 self.EntryType = type
 
     # Needs to be called before accessing the table
