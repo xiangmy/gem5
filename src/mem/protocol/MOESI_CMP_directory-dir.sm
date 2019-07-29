@@ -147,11 +147,11 @@ machine(MachineType:Directory, "Directory protocol")
     return dir_entry;
   }
 
-  State getState(TBE tbe, Addr addr) {
+  State getState(TBE tbe, Entry dir_entry, Addr addr) {
     return getDirectoryEntry(addr).DirectoryState;
   }
 
-  void setState(TBE tbe, Addr addr, State state) {
+  void setState(TBE tbe, Entry dir_entry, Addr addr, State state) {
     if (directory.isPresent(addr)) {
 
       if (state == State:I) {
@@ -198,7 +198,7 @@ machine(MachineType:Directory, "Directory protocol")
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Addr addr, State state) {
+  void setAccessPermission(Entry dir_entry, Addr addr, State state) {
     if (directory.isPresent(addr)) {
       getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
     }
@@ -243,23 +243,24 @@ machine(MachineType:Directory, "Directory protocol")
   in_port(unblockNetwork_in, ResponseMsg, responseToDir, rank=2) {
     if (unblockNetwork_in.isReady(clockEdge())) {
       peek(unblockNetwork_in, ResponseMsg) {
+        Entry dir_entry := getDirectoryEntry(in_msg.addr);
         if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
           if (getDirectoryEntry(in_msg.addr).WaitingUnblocks == 1) {
             trigger(Event:Last_Unblock, in_msg.addr,
-                    TBEs[in_msg.addr]);
+                    dir_entry, TBEs[in_msg.addr]);
           } else {
             trigger(Event:Unblock, in_msg.addr,
-                    TBEs[in_msg.addr]);
+                    dir_entry, TBEs[in_msg.addr]);
           }
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK_EXCLUSIVE) {
           trigger(Event:Exclusive_Unblock, in_msg.addr,
-                  TBEs[in_msg.addr]);
+                  dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Data, in_msg.addr,
-                  TBEs[in_msg.addr]);
+                  dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
           trigger(Event:DMA_ACK, in_msg.addr,
-                  TBEs[in_msg.addr]);
+                  dir_entry, TBEs[in_msg.addr]);
         } else {
           error("Invalid message");
         }
@@ -270,28 +271,29 @@ machine(MachineType:Directory, "Directory protocol")
   in_port(requestQueue_in, RequestMsg, requestToDir, rank=1) {
     if (requestQueue_in.isReady(clockEdge())) {
       peek(requestQueue_in, RequestMsg) {
+        Entry dir_entry := getDirectoryEntry(in_msg.addr);
         if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:GETS, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:GETS, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:GETX) {
-          trigger(Event:GETX, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:GETX, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:PUTX) {
-          trigger(Event:PUTX, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:PUTX, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:PUTO) {
-          trigger(Event:PUTO, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:PUTO, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:PUTO_SHARERS) {
-          trigger(Event:PUTO_SHARERS, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:PUTO_SHARERS, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:WRITEBACK_DIRTY_DATA) {
           trigger(Event:Dirty_Writeback, in_msg.addr,
-                  TBEs[in_msg.addr]);
+                  dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:WRITEBACK_CLEAN_ACK) {
           trigger(Event:Clean_Writeback, in_msg.addr,
-                  TBEs[in_msg.addr]);
+                  dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
           trigger(Event:DMA_READ, makeLineAddress(in_msg.addr),
-                  TBEs[makeLineAddress(in_msg.addr)]);
+                  dir_entry, TBEs[makeLineAddress(in_msg.addr)]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           trigger(Event:DMA_WRITE, makeLineAddress(in_msg.addr),
-                  TBEs[makeLineAddress(in_msg.addr)]);
+                  dir_entry, TBEs[makeLineAddress(in_msg.addr)]);
         } else {
           error("Invalid message");
         }
@@ -303,10 +305,11 @@ machine(MachineType:Directory, "Directory protocol")
   in_port(memQueue_in, MemoryMsg, responseFromMemory, rank=0) {
     if (memQueue_in.isReady(clockEdge())) {
       peek(memQueue_in, MemoryMsg) {
+      Entry dir_entry := getDirectoryEntry(in_msg.addr);
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:Memory_Data, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:Memory_Ack, in_msg.addr, dir_entry, TBEs[in_msg.addr]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
