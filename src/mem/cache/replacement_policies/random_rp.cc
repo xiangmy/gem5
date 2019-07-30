@@ -53,6 +53,9 @@ const
 void
 RandomRP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
+    // Update last touch timestamp
+    std::static_pointer_cast<RandomReplData>(
+        replacement_data)->lastTouchTick = curTick();
 }
 
 void

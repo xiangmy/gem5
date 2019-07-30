@@ -69,6 +69,9 @@ BRRIPRP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
     } else if (casted_replacement_data->rrpv > 0) {
         casted_replacement_data->rrpv--;
     }
+
+    // Update last touch timestamp
+    casted_replacement_data->lastTouchTick = curTick();
 }
 
 void

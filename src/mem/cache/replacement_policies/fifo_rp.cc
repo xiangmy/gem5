@@ -52,6 +52,9 @@ const
 void
 FIFORP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
+    // Update last touch timestamp
+    std::static_pointer_cast<FIFOReplData>(
+        replacement_data)->lastTouchTick = curTick();
     // A touch does not modify the insertion tick
 }
 
