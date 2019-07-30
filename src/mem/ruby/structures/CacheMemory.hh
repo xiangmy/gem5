@@ -173,6 +173,10 @@ class CacheMemory : public SimObject
     std::unordered_map<Addr, int> m_tag_index;
     std::vector<std::vector<AbstractCacheEntry*> > m_cache;
 
+    /**
+     * We use BaseReplacementPolicy from Classic system here, hence we can use
+     * different replacement policies from Classic system in Ruby system.
+     */
     BaseReplacementPolicy *m_replacementPolicy_ptr;
 
     BankedArray dataArray;

@@ -104,6 +104,14 @@ class BaseReplacementPolicy : public SimObject
     virtual std::shared_ptr<ReplacementData> instantiateEntry() = 0;
 
     /**
+     * We add the following two functions from AbstrctReplacementPolicy in Ruby
+     * system to get rid of AbstractReplacementPolicy. By doing this, we can
+     * use BaseReplacementPolicy in Ruby system so that we can use various
+     * replacement policies from Classic system when we instantiate a Ruby
+     * cache.
+     */
+
+    /**
      * Indicate whether this is WeightedLRUPolicy (return false if it's not).
      *
      * @return A Boolean value to indicate whether this is WeightedLRUPolicy.
