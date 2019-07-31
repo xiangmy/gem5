@@ -53,10 +53,6 @@ LFURP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     // Update reference count
     std::static_pointer_cast<LFUReplData>(replacement_data)->refCount++;
-
-    // Update last touch timestamp
-    std::static_pointer_cast<LFUReplData>(
-        replacement_data)->lastTouchTick = curTick();
 }
 
 void

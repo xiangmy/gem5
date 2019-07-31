@@ -155,9 +155,6 @@ const
         // Update node to not point to the touched leaf
         tree->at(tree_index) = !right;
     } while (tree_index != 0);
-
-    // Update last touch timestamp
-    treePLRU_replacement_data->lastTouchTick = curTick();
 }
 
 void

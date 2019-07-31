@@ -49,7 +49,8 @@ struct ReplacementData
          * function in AbstractReplacementPolicy in Ruby system. By adding
          * necessary functions from AbstractReplacementPolicy, we can use
          * BaseReplacementPolicy in Ruby system so that Ruby system can support
-         * different replacement policies from Classic system.
+         * different replacement policies from Classic system. For replacement
+         * policies that don't use lastTouchTick, we set it to 0.
          */
         Tick lastTouchTick;
 
