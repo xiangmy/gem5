@@ -46,7 +46,7 @@ struct ReplacementData
          * Tick on which the entry was last touched.
          *
          * This field is needed to return the correct value for getLastAccess()
-         * function in AbstarctReplacementPolicy in Ruby system. By adding
+         * function in AbstractReplacementPolicy in Ruby system. By adding
          * necessary functions from AbstractReplacementPolicy, we can use
          * BaseReplacementPolicy in Ruby system so that Ruby system can support
          * different replacement policies from Classic system.
