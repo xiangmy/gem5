@@ -43,8 +43,8 @@ BIPRP::BIPRP(const Params *p)
 void
 BIPRP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
-    std::shared_ptr<LRUReplData> casted_replacement_data =
-        std::static_pointer_cast<LRUReplData>(replacement_data);
+    std::shared_ptr<ReplacementData>
+                               casted_replacement_data = replacement_data;
 
     // Entries are inserted as MRU if lower than btp, LRU otherwise
     if (random_mt.random<unsigned>(1, 100) <= btp) {

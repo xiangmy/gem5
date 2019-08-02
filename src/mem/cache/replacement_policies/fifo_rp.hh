@@ -55,7 +55,7 @@ class FIFORP : public BaseReplacementPolicy
         /**
          * Default constructor. Invalidate data.
          */
-        FIFOReplData() : tickInserted(0) {}
+        FIFOReplData() : ReplacementData(), tickInserted(0) {}
     };
 
   public:
