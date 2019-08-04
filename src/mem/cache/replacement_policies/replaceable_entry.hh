@@ -34,24 +34,11 @@
 #include <cstdint>
 #include <memory>
 
-#include "params/BaseReplacementPolicy.hh"
-
 /**
  * The replacement data needed by replacement policies. Each replacement policy
  * should have its own implementation of replacement data.
  */
-struct ReplacementData
-{
-        /**
-         * Tick on which the entry was last touched.
-         */
-        Tick lastTouchTick;
-
-        /**
-         * Default constructor. Invalidata data.
-         */
-         ReplacementData() : lastTouchTick(0) {}
-};
+struct ReplacementData {};
 
 /**
  * A replaceable entry is a basic entry in a 2d table-like structure that needs
@@ -65,7 +52,7 @@ struct ReplacementData
  */
 class ReplaceableEntry
 {
-  protected:
+  private:
     /**
      * Set to which this entry belongs.
      */

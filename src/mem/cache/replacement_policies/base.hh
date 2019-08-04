@@ -102,21 +102,6 @@ class BaseReplacementPolicy : public SimObject
      * @return A shared pointer to the new replacement data.
      */
     virtual std::shared_ptr<ReplacementData> instantiateEntry() = 0;
-
-    /**
-     * Indicate whether this is WeightedLRUPolicy (return false if it's not).
-     *
-     * @return A Boolean value to indicate whether this is WeightedLRUPolicy.
-     */
-    virtual bool useOccupancy() const { return false; }
-
-    /**
-     * Get the time of the last access.
-     *
-     * @return the last access Tick.
-     */
-    Tick getLastAccess(const std::shared_ptr<ReplacementData>&
-                  replacement_data) { return replacement_data->lastTouchTick; }
 };
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BASE_HH__

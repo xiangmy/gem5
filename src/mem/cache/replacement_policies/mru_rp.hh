@@ -45,6 +45,19 @@ struct MRURPParams;
 
 class MRURP : public BaseReplacementPolicy
 {
+  protected:
+    /** MRU-specific implementation of replacement data. */
+    struct MRUReplData : ReplacementData
+    {
+        /** Tick on which the entry was last touched. */
+        Tick lastTouchTick;
+
+        /**
+         * Default constructor. Invalidate data.
+         */
+        MRUReplData() : lastTouchTick(0) {}
+    };
+
   public:
     /** Convenience typedef. */
     typedef MRURPParams Params;

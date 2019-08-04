@@ -33,16 +33,10 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5.objects.ReplacementPolicies import BaseReplacementPolicy
+from m5.objects.ReplacementPolicy import ReplacementPolicy
 
-class WeightedLRUReplacementPolicy(BaseReplacementPolicy):
+class WeightedLRUReplacementPolicy(ReplacementPolicy):
     type = "WeightedLRUReplacementPolicy"
     cxx_class = "WeightedLRUPolicy"
     cxx_header = "mem/ruby/system/WeightedLRUPolicy.hh"
     cache = Param.RubyCache("")
-
-    block_size = Param.Int(Parent.cache_line_size, "block size in bytes")
-
-    size = Param.MemorySize(Parent.size, "capacity in bytes")
-
-    assoc = Param.Int(Parent.assoc, "associativity")

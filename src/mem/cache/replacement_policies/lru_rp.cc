@@ -45,21 +45,24 @@ LRURP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 const
 {
     // Reset last touch timestamp
-    replacement_data->lastTouchTick = Tick(0);
+    std::static_pointer_cast<LRUReplData>(
+        replacement_data)->lastTouchTick = Tick(0);
 }
 
 void
 LRURP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     // Update last touch timestamp
-    replacement_data->lastTouchTick = curTick();
+    std::static_pointer_cast<LRUReplData>(
+        replacement_data)->lastTouchTick = curTick();
 }
 
 void
 LRURP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     // Set last touch timestamp
-    replacement_data->lastTouchTick = curTick();
+    std::static_pointer_cast<LRUReplData>(
+        replacement_data)->lastTouchTick = curTick();
 }
 
 ReplaceableEntry*
@@ -72,8 +75,10 @@ LRURP::getVictim(const ReplacementCandidates& candidates) const
     ReplaceableEntry* victim = candidates[0];
     for (const auto& candidate : candidates) {
         // Update victim entry if necessary
-        if (candidate->replacementData->lastTouchTick <
-                    victim->replacementData->lastTouchTick) {
+        if (std::static_pointer_cast<LRUReplData>(
+                    candidate->replacementData)->lastTouchTick <
+                std::static_pointer_cast<LRUReplData>(
+                    victim->replacementData)->lastTouchTick) {
             victim = candidate;
         }
     }
@@ -84,7 +89,7 @@ LRURP::getVictim(const ReplacementCandidates& candidates) const
 std::shared_ptr<ReplacementData>
 LRURP::instantiateEntry()
 {
-    return std::shared_ptr<ReplacementData>(new ReplacementData());
+    return std::shared_ptr<ReplacementData>(new LRUReplData());
 }
 
 LRURP*

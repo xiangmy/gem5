@@ -77,8 +77,7 @@ class BRRIPRP : public BaseReplacementPolicy
         /**
          * Default constructor. Invalidate data.
          */
-        BRRIPReplData(const int max_RRPV)
-                : ReplacementData(), rrpv(max_RRPV + 1) {}
+        BRRIPReplData(const int max_RRPV) : rrpv(max_RRPV + 1) {}
     };
 
     /**

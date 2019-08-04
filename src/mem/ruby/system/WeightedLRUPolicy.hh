@@ -36,80 +36,27 @@
 #ifndef __MEM_RUBY_SYSTEM_WEIGHTEDLRUPOLICY_HH__
 #define __MEM_RUBY_SYSTEM_WEIGHTEDLRUPOLICY_HH__
 
-#include "mem/cache/replacement_policies/base.hh"
+#include "mem/ruby/structures/AbstractReplacementPolicy.hh"
 #include "mem/ruby/structures/CacheMemory.hh"
 #include "params/WeightedLRUReplacementPolicy.hh"
 
 /* Simple true LRU replacement policy */
 
-struct WeightedLRUReplacementPolicyParams;
-
-class WeightedLRUPolicy : public BaseReplacementPolicy
+class WeightedLRUPolicy : public AbstractReplacementPolicy
 {
-  protected:
-  /** Weighted LRU implementation of replacement data. */
-  struct WeightedLRUReplData : ReplacementData
-  {
-      /** pointer for last occupancy */
-      int last_occ_ptr;
-      /**
-       * Default constructor. Invalidate data.
-       */
-      WeightedLRUReplData() : ReplacementData() {}
-  };
   public:
     typedef WeightedLRUReplacementPolicyParams Params;
     WeightedLRUPolicy(const Params* p);
-    ~WeightedLRUPolicy() {}
+    ~WeightedLRUPolicy();
 
-    /**
-     * Invalidate replacement data to set it as the next probable victim.
-     * Sets its last touch tick as the starting tick.
-     *
-     * @param replacement_data Replacement data to be invalidated.
-     */
-    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-                                                              const override;
-    /**
-     * Touch an entry to update its replacement data.
-     * Sets its last touch tick as the current tick.
-     *
-     * @param replacement_data Replacement data to be touched.
-     */
-    void touch(const std::shared_ptr<ReplacementData>&
-                                        replacement_data) const override;
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data,
-                                        Tick time , int occupancy) const;
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data,
-                                                        Tick time) const;
+    void touch(int64_t set, int64_t way, Tick time) override;
+    void touch(int64_t set, int64_t way, Tick time, int occupancy);
+    int64_t getVictim(int64_t set) const override;
 
-    /**
-     * Reset replacement data. Used when an entry is inserted.
-     * Sets its last touch tick as the current tick.
-     *
-     * @param replacement_data Replacement data to be reset.
-     */
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
-
-    /**
-     * Instantiate a replacement data entry.
-     *
-     * @return A shared pointer to the new replacement data.
-     */
-    std::shared_ptr<ReplacementData> instantiateEntry() override;
-
-    /**
-     * Find replacement victim using weight.
-     *
-     * @param candidates Replacement candidates, selected by indexing policy.
-     * @return Replacement entry to be replaced.
-     */
-    ReplaceableEntry* getVictim(const ReplacementCandidates&
-                                              candidates) const override;
     bool useOccupancy() const override { return true; }
 
     CacheMemory * m_cache;
+    int **m_last_occ_ptr;
 };
 
 #endif // __MEM_RUBY_SYSTEM_WeightedLRUPolicy_HH__
