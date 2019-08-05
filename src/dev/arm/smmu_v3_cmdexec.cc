@@ -56,8 +56,7 @@ SMMUCommandExecProcess::main(Yield &yield)
         busy = true;
 
         while (true) {
-            int sizeMask =
-                mask(smmu.regs.cmdq_base & Q_BASE_SIZE_MASK) & Q_CONS_PROD_MASK;
+            int sizeMask = mask(smmu.regs.cmdq_base & Q_BASE_SIZE_MASK);
 
             if ((smmu.regs.cmdq_cons & sizeMask) ==
                     (smmu.regs.cmdq_prod & sizeMask))
@@ -75,6 +74,8 @@ SMMUCommandExecProcess::main(Yield &yield)
         }
 
         busy = false;
+        // No more commands to process, signal the SMMU as drained
+        smmu.signalDrainDone();
 
         doSleep(yield);
     }

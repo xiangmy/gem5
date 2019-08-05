@@ -157,7 +157,6 @@ SMMUv3SlaveInterface::recvTimingReq(PacketPtr pkt)
         return false;
     }
 
-    xlateSlotsRemaining--;
     if (pkt->isWrite())
         wrBufSlotsRemaining -= nbeats;
 
@@ -202,8 +201,6 @@ SMMUv3SlaveInterface::atsSlaveRecvTimingReq(PacketPtr pkt)
         deviceNeedsRetry = true;
         return false;
     }
-
-    xlateSlotsRemaining--;
 
     std::string proc_name = csprintf("%s.atsport", name());
     const bool ats_request = true;
@@ -254,6 +251,16 @@ SMMUv3SlaveInterface::scheduleDeviceRetry()
         deviceNeedsRetry = false;
         schedule(sendDeviceRetryEvent, nextCycle());
     }
+}
+
+DrainState
+SMMUv3SlaveInterface::drain()
+{
+    // Wait until all SMMU translations are completed
+    if (xlateSlotsRemaining < params()->xlate_slots) {
+        return DrainState::Draining;
+    }
+    return DrainState::Drained;
 }
 
 SMMUv3SlaveInterface*

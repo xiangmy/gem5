@@ -78,6 +78,29 @@ SMMUTranslRequest::prefetch(Addr addr, uint32_t sid, uint32_t ssid)
     return req;
 }
 
+SMMUTranslationProcess::SMMUTranslationProcess(const std::string &name,
+    SMMUv3 &_smmu, SMMUv3SlaveInterface &_ifc)
+  :
+    SMMUProcess(name, _smmu),
+    ifc(_ifc)
+{
+    // Decrease number of pending translation slots on the slave interface
+    assert(ifc.xlateSlotsRemaining > 0);
+    ifc.xlateSlotsRemaining--;
+    reinit();
+}
+
+SMMUTranslationProcess::~SMMUTranslationProcess()
+{
+    // Increase number of pending translation slots on the slave interface
+    ifc.xlateSlotsRemaining++;
+    // If no more SMMU translations are pending (all slots available),
+    // signal SMMU Slave Interface as drained
+    if (ifc.xlateSlotsRemaining == ifc.params()->xlate_slots) {
+        ifc.signalDrainDone();
+    }
+}
+
 void
 SMMUTranslationProcess::beginTransaction(const SMMUTranslRequest &req)
 {
@@ -1173,8 +1196,6 @@ SMMUTranslationProcess::issuePrefetch(Addr addr)
     if (!ifc.prefetchEnable || ifc.xlateSlotsRemaining == 0)
         return;
 
-    ifc.xlateSlotsRemaining--;
-
     std::string proc_name = csprintf("%sprf", name());
     SMMUTranslationProcess *proc =
         new SMMUTranslationProcess(proc_name, smmu, ifc);
@@ -1201,7 +1222,6 @@ SMMUTranslationProcess::completeTransaction(Yield &yield,
 
 
     smmu.translationTimeDist.sample(curTick() - recvTick);
-    ifc.xlateSlotsRemaining++;
     if (!request.isAtsRequest && request.isWrite)
         ifc.wrBufSlotsRemaining +=
             (request.size + (ifc.portWidth-1)) / ifc.portWidth;
@@ -1249,8 +1269,6 @@ SMMUTranslationProcess::completeTransaction(Yield &yield,
 void
 SMMUTranslationProcess::completePrefetch(Yield &yield)
 {
-    ifc.xlateSlotsRemaining++;
-
     SMMUAction a;
     a.type = ACTION_TERMINATE;
     a.pkt = NULL;
@@ -1262,8 +1280,7 @@ SMMUTranslationProcess::completePrefetch(Yield &yield)
 void
 SMMUTranslationProcess::sendEvent(Yield &yield, const SMMUEvent &ev)
 {
-    int sizeMask = mask(smmu.regs.eventq_base & Q_BASE_SIZE_MASK) &
-            Q_CONS_PROD_MASK;
+    int sizeMask = mask(smmu.regs.eventq_base & Q_BASE_SIZE_MASK);
 
     if (((smmu.regs.eventq_prod+1) & sizeMask) ==
             (smmu.regs.eventq_cons & sizeMask))

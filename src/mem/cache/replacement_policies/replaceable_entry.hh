@@ -38,7 +38,25 @@
  * The replacement data needed by replacement policies. Each replacement policy
  * should have its own implementation of replacement data.
  */
-struct ReplacementData {};
+struct ReplacementData
+{
+        /**
+         * Tick on which the entry was last touched.
+         *
+         * This field is needed to return the correct value for getLastAccess()
+         * function in AbstractReplacementPolicy in Ruby system. By adding
+         * necessary functions from AbstractReplacementPolicy, we can use
+         * BaseReplacementPolicy in Ruby system so that Ruby system can support
+         * different replacement policies from Classic system. For replacement
+         * policies that don't use lastTouchTick, we set it to 0.
+         */
+        Tick lastTouchTick;
+
+        /**
+         * Default constructor. Invalidata data.
+         */
+         ReplacementData() : lastTouchTick(0) {}
+};
 
 /**
  * A replaceable entry is a basic entry in a 2d table-like structure that needs
